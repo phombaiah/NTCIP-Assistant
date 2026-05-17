@@ -22,7 +22,7 @@ EXAMPLE_QUESTIONS = [
 
 st.set_page_config(
     page_title="TransCore NTCIP Assistant (Demo)",
-    page_icon="🚦",
+    page_icon="assets/transcore_favicon.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )
