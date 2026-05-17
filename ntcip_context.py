@@ -186,33 +186,46 @@ standard say"* into *"how does this actually behave in the field."*
 
 ### Reading NTCIP OIDs
 
-NTCIP objects live under the IANA enterprise number `1206`, so every
-NTCIP OID begins `1.3.6.1.4.1.1206`. The `1206.4.2` arc is the NTCIP
-**devices** sub-tree; under it, the next octet identifies the device
-class. Well-known device-class roots: `1` = global objects
-([NTCIP 1201 v03](https://www.ntcip.org/file/2018/11/NTCIP1201v0315r.pdf)),
-`2` = signal controllers
-([NTCIP 1202](https://www.ntcip.org/file/2024/02/NTCIP-1202v03.35e-aspublished.pdf)),
-`3` = DMS
-([NTCIP 1203](https://www.ntcip.org/file/2018/11/NTCIP1203v03f.pdf)),
-`5` = ESS
-([NTCIP 1204](https://www.ntcip.org/file/2022/04/NTCIP-1204v0426b-2021_AsPublished.pdf)),
-`6` = CCTV
-([NTCIP 1205](https://www.ntcip.org/file/2018/11/NTCIP1205v01Amd1-14j-1.pdf)),
-`8` = ramp meters
-([NTCIP 1207](https://www.ntcip.org/file/2018/11/NTCIP1207v0214hj.pdf)),
-`10` = TSS
-([NTCIP 1209](https://www.ntcip.org/file/2018/11/NTCIP1209v0218jp.pdf)),
-`11` = signal-system masters
-([NTCIP 1210](https://www.ntcip.org/file/2018/11/NTCIP1210v0155r.pdf)),
-`12` = SCP/TSP
-([NTCIP 1211](https://www.ntcip.org/file/2018/11/NTCIP1211-v0224j.pdf)),
-`13` = ELMS
-([NTCIP 1213](https://www.ntcip.org/file/2023/02/1213-v0337c-aspublished.pdf)),
-`20` = RSU
-([NTCIP 1218](https://www.ntcip.org/file/2025/01/NTCIP-1218-v01A-2024-AsPublished.pdf)).
-Given an OID you've never seen, that fifth octet usually tells you
-which standard to open. Do not invent leaf numbers — cite the MIB file.
+NTCIP objects live under IANA private-enterprise number **1206**
+(NEMA), so every NTCIP OID begins `1.3.6.1.4.1.1206`. The high-level
+tree is established in
+[NTCIP 8004 v02 (SMI)](https://www.ntcip.org/file/2018/11/NTCIP8004v0217r.pdf):
+
+- `1206.4` is the **transportation** sub-arc (`{ nema 4 }`).
+- `1206.4.2` is the **devices** sub-arc under transportation.
+
+The next integer after `1206.4.2` is the **device-class octet** — that
+octet alone usually tells you which standard governs the OID. The
+canonical assignments (from NTCIP 8004's MIB, plus later
+post-2010 additions):
+
+| Octet | Identifier      | Standard |
+|-------|-----------------|----------|
+| 1     | `asc`           | [NTCIP 1202](https://www.ntcip.org/file/2024/02/NTCIP-1202v03.35e-aspublished.pdf) — Actuated Signal Controllers |
+| 2     | `ramp`          | [NTCIP 1207](https://www.ntcip.org/file/2018/11/NTCIP1207v0214hj.pdf) — Ramp Meters |
+| 3     | `dms`           | [NTCIP 1203](https://www.ntcip.org/file/2018/11/NTCIP1203v03f.pdf) — Dynamic Message Signs |
+| 4     | `tss`           | [NTCIP 1209](https://www.ntcip.org/file/2018/11/NTCIP1209v0218jp.pdf) — Transportation Sensor Systems |
+| 5     | `ess`           | [NTCIP 1204](https://www.ntcip.org/file/2022/04/NTCIP-1204v0426b-2021_AsPublished.pdf) — Environmental Sensor Stations |
+| 6     | `global`        | [NTCIP 1201](https://www.ntcip.org/file/2018/11/NTCIP1201v0315r.pdf) — Global Object Definitions |
+| 7     | `cctv`          | [NTCIP 1205](https://www.ntcip.org/file/2018/11/NTCIP1205v01Amd1-14j-1.pdf) — CCTV Camera Control |
+| 8     | `cctvSwitch`    | [NTCIP 1208](https://www.ntcip.org/file/2018/11/NTCIP1208v0112f.pdf) — CCTV Switching |
+| 9     | `dcm`           | [NTCIP 1206](https://www.ntcip.org/file/2018/11/NTCIP1206v0123f.pdf) — Data Collection & Monitoring |
+| 10    | `ssm`           | [NTCIP 1210](https://www.ntcip.org/file/2018/11/NTCIP1210v0155r.pdf) — Field Master Stations / Signal-System Masters |
+| 11    | `scp`           | [NTCIP 1211](https://www.ntcip.org/file/2018/11/NTCIP1211-v0224j.pdf) — Signal Control & Prioritization (TSP/EVP) |
+| 12    | `networkCamera` | (network-camera extensions, added post-8004 v02) |
+| 13    | `elms`          | [NTCIP 1213](https://www.ntcip.org/file/2023/02/1213-v0337c-aspublished.pdf) — Electrical & Lighting Management |
+| 17    | `saeNtcip`      | SAE-NTCIP joint specs (V2X message families like J2735) |
+| 18    | `rsu`           | [NTCIP 1218](https://www.ntcip.org/file/2025/01/NTCIP-1218-v01A-2024-AsPublished.pdf) — Roadside Units |
+
+Note the numbering is **not** the same as the standard number — e.g.
+ASC is NTCIP 1202 but lives at `devices.1`; DMS is NTCIP 1203 but
+lives at `devices.3`; RSU is NTCIP 1218 but lives at `devices.18`.
+The mapping is established by NTCIP 8004's SMI module — verify
+against that PDF (or the corresponding `.mib` source) for any
+OID-parsing answer.
+
+**Do not invent leaf numbers** beyond the device-class octet — those
+are defined per-standard inside the relevant MIB file.
 
 ### STMP vs SNMP tradeoffs
 
