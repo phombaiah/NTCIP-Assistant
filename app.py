@@ -10,6 +10,34 @@ from ntcip_context import NTCIP_CONTEXT
 MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 4096
 
+
+def _get_build_sha() -> str:
+    """Short git SHA of the deployed commit, or 'unknown' if unavailable."""
+    from pathlib import Path
+    here = Path(__file__).parent
+    try:
+        import subprocess
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=here, stderr=subprocess.DEVNULL, text=True, timeout=5,
+        ).strip()
+        if out:
+            return out
+    except Exception:
+        pass
+    try:
+        head = (here / ".git" / "HEAD").read_text().strip()
+        if head.startswith("ref: "):
+            sha = (here / ".git" / head[5:]).read_text().strip()
+        else:
+            sha = head
+        return sha[:7] if sha else "unknown"
+    except Exception:
+        return "unknown"
+
+
+BUILD_SHA = _get_build_sha()
+
 EXAMPLE_QUESTIONS = [
     "What is NTCIP?",
     "What is NTCIP 1202?",
@@ -94,6 +122,8 @@ with st.sidebar:
     if st.button("Clear chat", use_container_width=True):
         st.session_state["messages"] = []
         st.rerun()
+
+    st.caption(f"build `{BUILD_SHA}`")
 
 
 st.title("TransCore NTCIP Assistant")
