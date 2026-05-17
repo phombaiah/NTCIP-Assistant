@@ -1,8 +1,9 @@
-# NTCIP Assistant — Demo
+# TransCore NTCIP Assistant — Demo
 
 A small Streamlit chat app that answers questions about the **NTCIP**
-family of ITS standards. Backed by Anthropic's Claude (Sonnet 4.6),
-with a hand-curated NTCIP overview baked into the system prompt.
+family of ITS standards, TransCore-branded for prospect demos. Backed
+by Anthropic's Claude (Sonnet 4.6), with a hand-curated NTCIP overview
+baked into the system prompt.
 
 This is a demo — knowledge is a May 2026 snapshot and is not refreshed.
 

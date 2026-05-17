@@ -21,11 +21,13 @@ EXAMPLE_QUESTIONS = [
 
 
 st.set_page_config(
-    page_title="NTCIP Assistant (Demo)",
+    page_title="TransCore NTCIP Assistant (Demo)",
     page_icon="🚦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+st.logo("assets/transcore_logo.png", size="large")
 
 
 def password_ok() -> bool:
@@ -60,12 +62,13 @@ client = anthropic.Anthropic(api_key=api_key)
 
 
 with st.sidebar:
-    st.markdown("## 🚦 NTCIP Assistant")
-    st.caption("A demo built on Anthropic's Claude.")
+    st.markdown("## NTCIP Assistant")
+    st.caption("TransCore — Trusted Transportation Solutions")
     st.markdown(
-        "Ask questions about the **NTCIP** family of ITS standards — "
-        "document numbers, what each standard covers, version history, "
-        "and protocol architecture."
+        "TransCore's NTCIP knowledge assistant. Ask anything about the "
+        "**National Transportation Communications for ITS Protocol** family "
+        "of standards — document numbers, scope, version history, and "
+        "protocol architecture."
     )
 
     st.markdown("### Try a question")
@@ -76,9 +79,9 @@ with st.sidebar:
 
     st.divider()
     st.markdown(
-        "**Disclaimer.** This is a demo. Answers may be inaccurate or "
-        "incomplete. Always verify against the official standard before "
-        "relying on any answer. Knowledge snapshot: May 2026."
+        "**Disclaimer.** Demo built for TransCore. Answers may be "
+        "inaccurate or incomplete — always verify against the official "
+        "standard before relying on any answer. Knowledge snapshot: May 2026."
     )
     st.markdown("[Official NTCIP site ↗](https://www.ntcip.org/)")
     st.markdown(
@@ -91,10 +94,10 @@ with st.sidebar:
         st.rerun()
 
 
-st.title("NTCIP Assistant (Demo)")
+st.title("TransCore NTCIP Assistant")
 st.caption(
-    "Ask anything about the National Transportation Communications for ITS "
-    "Protocol — current standards, versions, scope, and architecture."
+    "Demo · Ask anything about the National Transportation Communications "
+    "for ITS Protocol — current standards, versions, scope, and architecture."
 )
 
 
