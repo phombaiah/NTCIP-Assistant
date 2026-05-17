@@ -14,9 +14,11 @@ EXAMPLE_QUESTIONS = [
     "What is NTCIP?",
     "What is NTCIP 1202?",
     "Which standards cover Dynamic Message Signs?",
-    "What's the difference between NTCIP 1202 v02 and v03?",
     "Explain the NTCIP layered architecture",
     "Which standards apply to roadside units for V2X?",
+    "How do major signal controller vendors differ in NTCIP 1202 implementation?",
+    "Why are agencies still running NTCIP 2101 on legacy plant?",
+    "STMP vs SNMP — when does each make sense in NTCIP?",
 ]
 
 

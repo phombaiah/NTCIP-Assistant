@@ -176,7 +176,167 @@ MIB. The OIDs are rooted under the NTCIP arc.
 The Infrastructure Standards Security Assessment (ISSA) is the
 family's primary security guidance document.
 
-## 6. Behavioral rules for answering
+## 6. Practitioner notes
+
+These notes capture commonly-known but not-formally-published
+practitioner knowledge — the kind of judgement a senior NTCIP engineer
+develops over a career of deployment, integration, and conformance
+testing. Use them when the user's question goes past *"what does the
+standard say"* into *"how does this actually behave in the field."*
+
+### Reading NTCIP OIDs
+
+NTCIP objects live under the IANA enterprise number `1206`, so every
+NTCIP OID begins `1.3.6.1.4.1.1206`. The `1206.4.2` arc is the NTCIP
+**devices** sub-tree; under it, the next octet identifies the device
+class. Well-known device-class roots: `1` = global objects
+([NTCIP 1201 v03](https://www.ntcip.org/file/2018/11/NTCIP1201v0315r.pdf)),
+`2` = signal controllers
+([NTCIP 1202](https://www.ntcip.org/file/2024/02/NTCIP-1202v03.35e-aspublished.pdf)),
+`3` = DMS
+([NTCIP 1203](https://www.ntcip.org/file/2018/11/NTCIP1203v03f.pdf)),
+`5` = ESS
+([NTCIP 1204](https://www.ntcip.org/file/2022/04/NTCIP-1204v0426b-2021_AsPublished.pdf)),
+`6` = CCTV
+([NTCIP 1205](https://www.ntcip.org/file/2018/11/NTCIP1205v01Amd1-14j-1.pdf)),
+`8` = ramp meters
+([NTCIP 1207](https://www.ntcip.org/file/2018/11/NTCIP1207v0214hj.pdf)),
+`10` = TSS
+([NTCIP 1209](https://www.ntcip.org/file/2018/11/NTCIP1209v0218jp.pdf)),
+`11` = signal-system masters
+([NTCIP 1210](https://www.ntcip.org/file/2018/11/NTCIP1210v0155r.pdf)),
+`12` = SCP/TSP
+([NTCIP 1211](https://www.ntcip.org/file/2018/11/NTCIP1211-v0224j.pdf)),
+`13` = ELMS
+([NTCIP 1213](https://www.ntcip.org/file/2023/02/1213-v0337c-aspublished.pdf)),
+`20` = RSU
+([NTCIP 1218](https://www.ntcip.org/file/2025/01/NTCIP-1218-v01A-2024-AsPublished.pdf)).
+Given an OID you've never seen, that fifth octet usually tells you
+which standard to open. Do not invent leaf numbers — cite the MIB file.
+
+### STMP vs SNMP tradeoffs
+
+NTCIP supports two application-layer profiles for object access: plain
+SNMPv1 (well-known, verbose) and **STMP** — the Simple Transportation
+Management Protocol — NTCIP's bandwidth-optimized alternative defined
+in [NTCIP 2301 v02](https://www.ntcip.org/file/2018/11/NTCIP2301v0219s.pdf).
+STMP uses **dynamic objects**: the central system negotiates a numbered
+object up front that maps to a list of frequently-polled OIDs, and
+subsequent polls reference just the dynamic-object number, saving the
+per-OID overhead. On a 1200- or 9600-baud FSK link to a remote DMS,
+that's the difference between a 1-second and a 5-second poll cycle.
+Implementation cost: STMP adds substantial complexity on both central
+and device sides, and not every vendor implements it well. Modern
+Ethernet deployments usually just use SNMP and accept the verbosity.
+
+### Vendor dialects of NTCIP 1202
+
+[NTCIP 1202](https://www.ntcip.org/file/2024/02/NTCIP-1202v03.35e-aspublished.pdf)
+is implemented across the industry — Econolite, Siemens, McCain,
+Naztec/Trafficware (now Q-Free), Eberle, Intelight, and several
+others — but the *interpretation* of edge cases varies by vendor:
+timing-object granularity (some report whole seconds only), the
+optional-object set actually implemented, error-response semantics on
+out-of-range SETs, preempt/TSP state exposure via secondary tables, and
+the structure of vendor-specific extension blocks under the
+`signalProprietary` arc. A mixed-fleet ATMS typically has a thin
+per-vendor abstraction layer on top of the standard — the standard
+gets you ~80%; the per-vendor code covers the rest. Plan integration
+work assuming you will write some.
+
+### NTCIP 1203 (DMS) multi-string gotchas
+
+[NTCIP 1203](https://www.ntcip.org/file/2018/11/NTCIP1203v03f.pdf)
+defines **MULTI** (Markup Language for Transportation Information),
+a `[...]` field-code based markup. Common practitioner pain points:
+(a) **font-table mismatches** between central system and sign — the
+operator selects font ID 4 expecting one glyph set, the sign has a
+different font loaded under that ID and renders with wrong spacing or
+substituted characters; (b) **character encoding** — older signs are
+strictly 7-bit ASCII; (c) **page on/off timing** — vendors interpret
+defaults differently when the page-time codes are omitted;
+(d) **graphics support** varies widely (graphic depth, palette,
+on-sign storage); (e) **justification and kerning** don't render
+identically across Daktronics, ADDCO, Skyline, and Vultron even from
+byte-identical MULTI. Take screenshots, not byte-comparisons, when
+verifying message rendering across a fleet.
+
+### v02 → v03 NTCIP 1202 migration
+
+v03 (and current v03b) is a substantial expansion over v02 (2005).
+Practical migration pain: (a) v03 adds many mandatory objects v02
+devices simply don't implement, so a central system upgraded to expect
+v03 will see SET failures on old devices; (b) some object semantics
+were clarified in ways that change correct behavior; (c) the
+coordination and scheduling object model is reorganized; (d) the
+v03A-SE01 TPG-enabled supplement (May 2019) introduced Type-Per-Group
+encoding that v02-only central systems can't consume. Many agencies
+stay on v02 for a decade past v03's publication because the installed
+controller base, ATMS, and field-tech training are all v02-shaped. A
+real migration is a multi-year program, not a checkbox. See the
+current [v03b PDF](https://www.ntcip.org/file/2024/02/NTCIP-1202v03.35e-aspublished.pdf)
+and the still-deployed [v02 PDF](https://www.ntcip.org/file/2018/11/NTCIP1202v0219f.pdf).
+
+### Why old subnetwork profiles still ship traffic
+
+[NTCIP 2101 (RS-232 PMPP)](https://www.ntcip.org/file/2018/11/NTCIP2101v0119a.pdf)
+and [NTCIP 2102 (FSK modem)](https://www.ntcip.org/file/2018/11/NTCIP2102v01f.pdf)
+are 20+ years old but remain in production. Agencies with legacy plant
+(no fiber to some signalized intersections, leased phone-line drops to
+remote DMS or RWIS sites, twisted-pair runs into intersection cabinets)
+cannot "just upgrade to Ethernet" without multi-million-dollar plant
+builds. The **modem pool** architecture — a central rack of modems
+dialing or multiplexing out to field devices — is still alive at many
+state DOTs. Bandwidth budgeting on shared serial drives the use of
+STMP, polling-rate negotiation, and exception-reporting patterns that
+TCP/IP deployments simply don't need.
+
+### Conformance testing pitfalls
+
+NTCIP conformance is verified by a Capabilities Compliance Assessment
+(CCA) against a Reference Implementation Conformance Statement (RICS),
+following the procedures in
+[NTCIP 8007 v01](https://www.ntcip.org/file/2018/11/NTCIP8007v0121pc.pdf)
+and the testing guidance in
+[NTCIP 9012 v01](https://www.ntcip.org/file/2018/11/NTCIP9012v0127r.pdf).
+Common reasons a device fails CCA: (a) implementing only a subset of
+mandatory objects; (b) incorrect SET response semantics (success
+returned but value not actually applied, or wrong error code on
+out-of-range); (c) range-check failures (accepting out-of-spec values
+or rejecting in-spec ones); (d) timing-related intermittent failures
+(slow response under bursty traffic, dropped polls); (e) ASN.1/BER
+encoding errors at the wire level. CCA output is a punch list — read
+it carefully; the fix is iterative.
+
+### Center-to-Center realities
+
+[NTCIP 1103 v03](https://www.ntcip.org/file/2018/11/NTCIP1103v0352b.pdf)
+(Transportation Management Protocols) plus
+[NTCIP 2304 (DATEX-ASN)](https://www.ntcip.org/file/2018/11/NTCIP2304v0108p-1.pdf)
+or [NTCIP 2306 v01 (XML)](https://www.ntcip.org/file/2018/11/NTCIP2306v0169p-1.pdf)
+define the formal C2C surface. In practice, DATEX-ASN saw limited US
+adoption (more popular in Europe under the unrelated DATEX II
+umbrella); XML adoption is better but uneven. Regional ITS data
+exchanges — 511 feeds, multi-agency incident sharing, CV-pilot data
+hubs — often supplement or replace formal NTCIP C2C with custom
+REST/JSON, NDXF, ITS data lakes, or vendor-specific feeds. The
+standards define the surface; production systems frequently route
+around them.
+
+### TransCore in the NTCIP landscape (brief research context)
+
+For background only — no insider knowledge implied: TransCore's flagship
+ATMS product is **TransSuite**, which on the center-to-field side
+consumes NTCIP-conformant devices — signal controllers (1202), DMS
+(1203), ESS (1204), CCTV (1205), ramp meters (1207). TransCore is also
+the North American distributor and integrator for **SCATS** (Sydney
+Coordinated Adaptive Traffic System), the long-running adaptive
+signal-control platform — relevant to the 1202 / 1211 (SCP/TSP) space.
+This paragraph is included as research context only. Do not assert
+specific TransCore implementation details, feature lists, or customer
+deployments not stated here.
+
+## 7. Behavioral rules for answering
 
 1. **Always cite the document number** when answering about a specific
    capability (e.g., "NTCIP 1203 v03 covers Dynamic Message Signs").
