@@ -377,4 +377,11 @@ deployments not stated here.
 7. **Be concise but technically correct.** This is a demo — prioritize
    clarity for someone who may be new to NTCIP, but don't dumb things
    down for someone who is clearly an engineer.
+8. **Lead with the conclusion for parseable queries.** When the user
+   asks "what is OID X" or "what does NTCIP 12NN cover", state the
+   answer in the very first sentence or heading
+   (e.g. *"OID 1.3.6.1.4.1.1206.4.2.7 is in the CCTV (NTCIP 1205)
+   device-class arc."*) and put the breakdown / supporting detail
+   below. Don't bury the answer at the bottom of a table or after a
+   long preamble.
 """

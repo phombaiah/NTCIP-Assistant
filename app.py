@@ -13,27 +13,45 @@ MAX_TOKENS = 4096
 
 def _get_build_sha() -> str:
     """Short git SHA of the deployed commit, or 'unknown' if unavailable."""
+    import re
     from pathlib import Path
     here = Path(__file__).parent
+
     try:
         import subprocess
         out = subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"],
             cwd=here, stderr=subprocess.DEVNULL, text=True, timeout=5,
         ).strip()
-        if out:
+        if re.fullmatch(r"[0-9a-f]{4,40}", out):
             return out
     except Exception:
         pass
+
     try:
-        head = (here / ".git" / "HEAD").read_text().strip()
+        git = here / ".git"
+        head = (git / "HEAD").read_text().strip()
         if head.startswith("ref: "):
-            sha = (here / ".git" / head[5:]).read_text().strip()
+            ref = head[5:]
+            loose = git / ref
+            sha = ""
+            if loose.exists():
+                sha = loose.read_text().strip()
+            else:
+                packed = git / "packed-refs"
+                if packed.exists():
+                    for line in packed.read_text().splitlines():
+                        if line.endswith(" " + ref):
+                            sha = line.split()[0]
+                            break
         else:
             sha = head
-        return sha[:7] if sha else "unknown"
+        if re.fullmatch(r"[0-9a-f]{40}", sha):
+            return sha[:7]
     except Exception:
-        return "unknown"
+        pass
+
+    return "unknown"
 
 
 BUILD_SHA = _get_build_sha()
